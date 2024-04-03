@@ -8,10 +8,11 @@ import ru.apzakharov.gamecore.input_processor.InputProcessor;
 public interface GameContext {
 
     void offerInput(InputProcessor.Input input);
+    void addContextObject(GameObject object);
 
     Pair<Integer, Integer> getGameWindowSize();
 
-    ObjectView buildView();
+    <C> ObjectView<C> buildView();
 
     default void visitForAction(ActionVisitor visitor) {
         if (visitor.isActionExist(this)) {

@@ -43,9 +43,7 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
         String[][] matrix = new String[gameWindowSize.getLeft()][gameWindowSize.getRight()];
         for (int i = 0; i < matrix.length; i++) {
             matrix[i] = new String[gameWindowSize.getRight()];
-            for (int j = 0; j < matrix[i].length; j++){
-                matrix[i][j] = EMPTY_EMMIT;
-            }
+            Arrays.fill(matrix[i], EMPTY_EMMIT);
         }
         return matrix;
     }

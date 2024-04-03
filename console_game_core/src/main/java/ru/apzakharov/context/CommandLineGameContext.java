@@ -11,6 +11,7 @@ public interface CommandLineGameContext extends GameContext {
 
     Set<SimpleCommandLineObjectView> getContextObjectViews();
 
+
     @Override
     SimpleCommandLineObjectView buildView();
 
