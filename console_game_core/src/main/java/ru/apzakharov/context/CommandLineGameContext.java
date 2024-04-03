@@ -1,6 +1,7 @@
 package ru.apzakharov.context;
 
 import lombok.Getter;
+import lombok.Setter;
 import ru.apzakharov.gamecore.context.GameContext;
 
 import java.util.Set;
@@ -14,6 +15,7 @@ public interface CommandLineGameContext extends GameContext {
     SimpleCommandLineObjectView buildView();
 
     @Getter
+    @Setter
     class SimpleCommandLineObjectView extends GameContext.ObjectView<String> {
         private int x1, x2;
         private int y1, y2;

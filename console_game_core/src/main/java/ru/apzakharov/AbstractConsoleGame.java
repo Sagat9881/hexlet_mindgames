@@ -3,7 +3,7 @@ package ru.apzakharov;
 import ru.apzakharov.context.CommandLineGameContext;
 import ru.apzakharov.gamecore.AbstractGame;
 import ru.apzakharov.gamecore.draw_processor.DrawProcessor;
-import ru.apzakharov.input_processor.ConsoleInputProcessor;
+import ru.apzakharov.input_processor.ConsoleBlockingInputProcessor;
 
 import java.io.IOException;
 
@@ -11,7 +11,7 @@ public abstract class AbstractConsoleGame<GAME_CONTEXT extends CommandLineGameCo
 
 //    final Atlas<String> atlas;
 
-    protected AbstractConsoleGame(GAME_CONTEXT context, ConsoleInputProcessor inputProcessor, DrawProcessor<GAME_CONTEXT> drawProcessor) {
+    protected AbstractConsoleGame(GAME_CONTEXT context, ConsoleBlockingInputProcessor inputProcessor, DrawProcessor<GAME_CONTEXT> drawProcessor) {
         super(context, inputProcessor, drawProcessor, System.out, System.in);
     }
 

@@ -1,7 +1,7 @@
 package ru.apzakharov.draw_processor.atlas_processor.dto;
 
 import lombok.Getter;
-import ru.apzakharov.gamecore.draw_processor.AbstractAtlasNode;
+import ru.apzakharov.gamecore.draw_processor.atlas_processor.AbstractAtlasNode;
 
 @Getter
 public class PlainStringNode extends AbstractAtlasNode<String, PlainStringNode> {

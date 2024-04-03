@@ -1,12 +1,13 @@
 package ru.apzakharov.gamecore.context;
 
+import lombok.Getter;
 import ru.apzakharov.data_structure.abstract_structure.Pair;
 import ru.apzakharov.gamecore.action.ActionVisitor;
-import ru.apzakharov.gamecore.input_processor.Input;
+import ru.apzakharov.gamecore.input_processor.InputProcessor;
 
 public interface GameContext {
 
-    void offerInput(Input input);
+    void offerInput(InputProcessor.Input input);
 
     Pair<Integer, Integer> getGameWindowSize();
 
@@ -18,9 +19,9 @@ public interface GameContext {
         }
     }
 
-
-   class ObjectView<COLOR_CONTAINER> {
-        final private COLOR_CONTAINER colorCode;
+    @Getter
+    class ObjectView<COLOR_CONTAINER> {
+        public COLOR_CONTAINER colorCode;
 
         public ObjectView(COLOR_CONTAINER colorCode) {
             this.colorCode = colorCode;

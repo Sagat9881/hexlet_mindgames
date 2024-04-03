@@ -6,6 +6,7 @@ import ru.apzakharov.data_structure.abstract_structure.Pair;
 import ru.apzakharov.data_structure.abstract_structure.Queue;
 import ru.apzakharov.data_structure.structure.LinkedListQueue;
 import ru.apzakharov.gamecore.draw_processor.DrawProcessor;
+import ru.apzakharov.input_processor.AnsiColors;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -18,6 +19,8 @@ import static ru.apzakharov.draw_processor.Axis.X;
 import static ru.apzakharov.draw_processor.Axis.Y;
 
 public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> {
+    public static final String EMMIT = "*";
+    public static final String EMPTY_EMMIT = " ";
 
     @Override
     public String drawFrame(CommandLineGameContext context) {
@@ -28,16 +31,23 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
                Но это потом, пока считаем, что масштабы совпадают
          */
 
-        final String[][] drawMatrix = buildMatrix(context);
+        final String[][] drawMatrix = preFillMatrix(context);
 
         fillWindowMatrix(context, drawMatrix);
 
         return buildFrame(drawMatrix);
     }
 
-    private static String[][] buildMatrix(CommandLineGameContext context) {
+    private static String[][] preFillMatrix(CommandLineGameContext context) {
         final Pair<Integer, Integer> gameWindowSize = context.getGameWindowSize();
-        return new String[gameWindowSize.getLeft()][gameWindowSize.getRight()];
+        String[][] matrix = new String[gameWindowSize.getLeft()][gameWindowSize.getRight()];
+        for (int i = 0; i < matrix.length; i++) {
+            matrix[i] = new String[gameWindowSize.getRight()];
+            for (int j = 0; j < matrix[i].length; j++){
+                matrix[i][j] = EMPTY_EMMIT;
+            }
+        }
+        return matrix;
     }
 
     private static String buildFrame(String[][] drawMatrix) {
@@ -47,10 +57,14 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
     }
 
     private void fillWindowMatrix(CommandLineGameContext context, String[][] drawMatrix) {
-        getPointQueueStream(context)
-                .forEachOrdered(pointQueue -> {
-                    ForkJoinPool.commonPool().invoke(new FillMatrixRecursiveTask(drawMatrix, pointQueue));
-                });
+        try (ForkJoinPool forkJoinPool = ForkJoinPool.commonPool()) {
+            getPointQueueStream(context)
+                    .forEachOrdered(pointQueue -> {
+                        forkJoinPool.invoke(new FillMatrixRecursiveTask(drawMatrix, pointQueue));
+                    });
+        } catch (Exception e) {
+//         :(
+        }
     }
 
     private Stream<PointQueue> getPointQueueStream(CommandLineGameContext context) {
@@ -59,6 +73,7 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
                         PointQueue.builder()
                                 .xQueue(getPoints(view, X))
                                 .yQueue(getPoints(view, Y))
+                                .colorCode(view.getColorCode())
                                 .build())
                 .sorted(compareObjects());
     }
@@ -81,7 +96,7 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
     }
 
     private static void buildQueue(int point0, int point1, LinkedListQueue<Integer> queuePoint) {
-        for (int i = point0; i >= point1; i++) {
+        for (int i = point0; i <= point1; i++) {
             queuePoint.offer(i);
         }
     }
@@ -96,6 +111,7 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
     }
 
     private static class FillMatrixRecursiveTask extends RecursiveAction {
+
         private final String[][] matrix;
         private final PointQueue pointQueue;
 
@@ -108,34 +124,31 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
         protected void compute() {
             //Первая строка
             Integer y0 = pointQueue.yQueue.poll();
-            // Пока строки есть - заходим в цикл
-            while (y0 != null) {
-                //рекурсивно заполняем строку значениями
-                fillLineRecursive(y0);
-                //вытаскиваем следующие строки
-                y0 = pointQueue.yQueue.poll();
+
+            // Пока строки есть - заходим в рекурсию
+            if (y0 != null) {
+
+                //Спускаемся дальше по рекурсии
+                new FillMatrixRecursiveTask(this.matrix, this.pointQueue).fork().join();
+
+                //итеративно заполняем строку значениями
+                fillLine(y0);
             }
 
         }
 
-        private void fillLineRecursive(Integer y0) {
-            final Integer x0 = pointQueue.xQueue.poll();
+        private void fillLine(Integer y0) {
+            for (Integer point : pointQueue.xQueue) {
+                // Лежит ли существующая точка в координатной плоскость
+                boolean isNotOutOfWindowForY = y0 > -1 && matrix.length > y0;
+                boolean isNotOutOfWindowForX = point > -1 && matrix[y0].length > point;
 
-            // Закончились ли точки в очереди
-            boolean isXExist = x0 != null;
-            boolean isYExist = y0 != null;
-
-            // Лежит ли существующая точка в координатной плоскость
-            boolean isNotOutOfWindowForY = isYExist && y0 > -1 && matrix.length > y0;
-            boolean isNotOutOfWindowForX = isYExist && isXExist && x0 > -1 && matrix[y0].length > x0;
-
-            // 1) точки которые нужно внести в матрицу существуют.
-            // 2) точки лежат в пределах окна.
-            if (isNotOutOfWindowForY && isNotOutOfWindowForX) {
-                // TODO: Пока что оставим объекты одного цвета
-                matrix[y0][x0] = pointQueue.colorCode;
-                //Идем глубже в рекурсию пока не закончатся точки
-                new FillMatrixRecursiveTask(matrix, pointQueue).fork().join();
+                // 1) точки которые нужно внести в матрицу существуют.
+                // 2) точки лежат в пределах окна.
+                if (isNotOutOfWindowForY && isNotOutOfWindowForX) {
+                    // TODO: Пока что оставим объекты одного цвета
+                    matrix[y0][point] = pointQueue.colorCode + EMMIT + AnsiColors.ANSI_RESET.colorCode;
+                }
             }
         }
     }

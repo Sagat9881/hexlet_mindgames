@@ -21,11 +21,6 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>ru.apzakharov</groupId>
-            <artifactId>mindgame_core</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
 
         <!--COMPILE SCOPE -->
         <dependency>
@@ -90,6 +85,12 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
             <version>2.23.1</version>
+        </dependency>
+        <dependency>
+            <groupId>ru.apzakharov.hexlet</groupId>
+            <artifactId>mindgame_core</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
 
 
