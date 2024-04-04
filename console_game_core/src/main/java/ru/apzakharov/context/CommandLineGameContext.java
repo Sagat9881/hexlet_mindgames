@@ -9,20 +9,20 @@ import java.util.Set;
 public interface CommandLineGameContext extends GameContext {
 
 
-    Set<SimpleCommandLineObjectView> getContextObjectViews();
+    Set<CommandLineObjectView> getContextObjectViews();
 
 
     @Override
-    SimpleCommandLineObjectView buildView();
+    CommandLineObjectView buildView();
 
     @Getter
     @Setter
-    class SimpleCommandLineObjectView extends GameContext.ObjectView<String> {
+    class CommandLineObjectView extends GameContext.ObjectView<String> {
         private int x1, x2;
         private int y1, y2;
 
-        public SimpleCommandLineObjectView(String colorCode) {
-            super(colorCode);
+        public CommandLineObjectView(String colorCode, int layer) {
+            super(colorCode, layer);
         }
     }
 

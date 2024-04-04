@@ -4,6 +4,7 @@ import ru.apzakharov.context.CommandLineGameContext;
 import ru.apzakharov.data_structure.abstract_structure.Queue;
 import ru.apzakharov.data_structure.structure.LinkedListQueue;
 import ru.apzakharov.draw_processor.atlas_processor.dto.AnimationStep;
+import ru.apzakharov.gamecore.context.GameObject;
 import ru.apzakharov.gamecore.draw_processor.atlas_processor.AtlasProcessor;
 import ru.apzakharov.draw_processor.atlas_processor.dto.PlainStringNode;
 
@@ -14,7 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 //TODO: Стринг уже есть в процессоре атласов
 //      стоит перестроить систему дженериков так, чтоб не приходилось дублировать типы
 //      AnimationStep должен получить свой тип из процессора, а не прописываться руками
-public class SimpleCommandLineAtlasProcessor implements AtlasProcessor<CommandLineGameContext, String, PlainStringNode> {
+public class SimpleCommandLineAtlasProcessor<O extends GameObject> implements AtlasProcessor<CommandLineGameContext, String, PlainStringNode> {
     private static final long ANIMATION_SPEED = 1500L;
     private static final Long INIT_CHECK_VALUE = 0L;
     private final Queue.ListQueue<AnimationStep<String>> nodes = new LinkedListQueue<>();
@@ -41,7 +42,8 @@ public class SimpleCommandLineAtlasProcessor implements AtlasProcessor<CommandLi
     @Override
     public void next() {
         if (checkNext()) {
-            //TODO: Все равно тут не атомарно - надо сделать атомарную операцию (может класс передизайнить?)
+            // Очередь анимаций не потокобезопасная -> метод не потокобезопасный
+            //TODO: переписать очередь
             AnimationStep<String> objectFrame = nodes.poll();
             currentAnimation.set(objectFrame);
             last_check.set(INIT_CHECK_VALUE);

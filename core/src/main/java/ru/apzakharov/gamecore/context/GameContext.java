@@ -8,6 +8,7 @@ import ru.apzakharov.gamecore.input_processor.InputProcessor;
 public interface GameContext {
 
     void offerInput(InputProcessor.Input input);
+
     void addContextObject(GameObject object);
 
     Pair<Integer, Integer> getGameWindowSize();
@@ -23,9 +24,11 @@ public interface GameContext {
     @Getter
     class ObjectView<COLOR_CONTAINER> {
         public COLOR_CONTAINER colorCode;
+        public int layer;
 
-        public ObjectView(COLOR_CONTAINER colorCode) {
+        public ObjectView(COLOR_CONTAINER colorCode, int layer) {
             this.colorCode = colorCode;
+            this.layer = layer;
         }
     }
 

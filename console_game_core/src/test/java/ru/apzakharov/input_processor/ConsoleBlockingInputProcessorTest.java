@@ -27,8 +27,8 @@ public class ConsoleBlockingInputProcessorTest {
     void awaitAndBuildInput() {
         TestInputStream testInputStream = new TestInputStream();
 
-//        inputProcessor.awaitAndBuildInput(testInputStream);
-//        assertNull(inputProcessor.getInput());
+        inputProcessor.awaitAndBuildInput(testInputStream);
+        assertNull(inputProcessor.getInput());
 
         testInputStream.setInput(TEST);
         inputProcessor.awaitAndBuildInput(testInputStream);

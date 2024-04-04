@@ -1,6 +1,7 @@
 package ru.apzakharov.draw_processor;
 
 import lombok.Builder;
+import lombok.Getter;
 import ru.apzakharov.context.CommandLineGameContext;
 import ru.apzakharov.data_structure.abstract_structure.Pair;
 import ru.apzakharov.data_structure.abstract_structure.Queue;
@@ -8,8 +9,8 @@ import ru.apzakharov.data_structure.structure.LinkedListQueue;
 import ru.apzakharov.gamecore.draw_processor.DrawProcessor;
 import ru.apzakharov.input_processor.AnsiColors;
 
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 import java.util.stream.Collectors;
@@ -20,7 +21,7 @@ import static ru.apzakharov.draw_processor.Axis.Y;
 
 public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> {
     public static final String EMMIT = "*";
-    public static final String EMPTY_EMMIT = " ";
+    public static final String EMPTY_EMMIT = AnsiColors.ANSI_WHITE.colorCode + " ~ " + AnsiColors.ANSI_RESET.colorCode;
 
     @Override
     public String drawFrame(CommandLineGameContext context) {
@@ -56,32 +57,41 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
 
     private void fillWindowMatrix(CommandLineGameContext context, String[][] drawMatrix) {
         try (ForkJoinPool forkJoinPool = ForkJoinPool.commonPool()) {
-            getPointQueueStream(context)
-                    .forEachOrdered(pointQueue -> {
-                        forkJoinPool.invoke(new FillMatrixRecursiveTask(drawMatrix, pointQueue));
-                    });
+            final Map<Integer, List<PointsHolder>> pointsByLayers = getPointQueueStream(context)
+                    .collect(Collectors.groupingBy(PointsHolder::getLayer, Collectors.toList()));
+
+            pointsByLayers.keySet().forEach(key -> {
+                pointsByLayers.get(key)
+                        .forEach(pointsHolder -> {
+                            forkJoinPool.invoke(new FillMatrixRecursiveTask(drawMatrix, pointsHolder));
+                        });
+            });
+
+
+//
         } catch (Exception e) {
 //         :(
         }
     }
 
-    private Stream<PointQueue> getPointQueueStream(CommandLineGameContext context) {
+    private Stream<PointsHolder> getPointQueueStream(CommandLineGameContext context) {
         return context.getContextObjectViews().stream()
                 .map(view ->
-                        PointQueue.builder()
-                                .xQueue(getPoints(view, X))
-                                .yQueue(getPoints(view, Y))
+                        PointsHolder.builder()
+                                .xVector(getPoints(view, X))
+                                .yVector(getPoints(view, Y))
                                 .colorCode(view.getColorCode())
+                                .layer(view.getLayer())
                                 .build())
                 .sorted(compareObjects());
     }
 
-    private static Comparator<PointQueue> compareObjects() {
-        return Comparator.<PointQueue>comparingInt(pointQueue -> pointQueue.yQueue.peek())
-                .thenComparing(pointQueue -> pointQueue.xQueue.peek());
+    private static Comparator<PointsHolder> compareObjects() {
+        return Comparator.<PointsHolder>comparingInt(pointsHolder -> pointsHolder.yVector.peek())
+                .thenComparing(pointsHolder -> pointsHolder.xVector.peek());
     }
 
-    private Queue.ListQueue<Integer> getPoints(CommandLineGameContext.SimpleCommandLineObjectView view, Axis axis) {
+    private Queue.ListQueue<Integer> getPoints(CommandLineGameContext.CommandLineObjectView view, Axis axis) {
         final LinkedListQueue<Integer> queuePoint = new LinkedListQueue<>();
         switch (axis) {
             case X:
@@ -93,59 +103,130 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
         return queuePoint;
     }
 
-    private static void buildQueue(int point0, int point1, LinkedListQueue<Integer> queuePoint) {
+    private static void buildQueue(int point0, int point1, LinkedListQueue<Integer> pointsVector) {
         for (int i = point0; i <= point1; i++) {
-            queuePoint.offer(i);
+            pointsVector.offer(i);
         }
     }
 
 
     @Builder
-    private static class PointQueue {
+    @Getter
+    private static final class PointsHolder {
         private final String colorCode;
-        private final Integer x0, y0;
-        protected final Queue.ListQueue<Integer> xQueue;
-        protected final Queue.ListQueue<Integer> yQueue;
+        private final Integer x0;
+        private final Integer y0;
+        private final int layer;
+        private final Queue.ListQueue<Integer> xVector;
+        private final Queue.ListQueue<Integer> yVector;
+
+        private PointsHolder(String colorCode, Integer x0, Integer y0, int layer, Queue.ListQueue<Integer> xVector,
+                             Queue.ListQueue<Integer> yVector) {
+            this.colorCode = colorCode;
+            this.x0 = x0;
+            this.y0 = y0;
+            this.layer = layer;
+            this.xVector = xVector;
+            this.yVector = yVector;
+        }
+
+        public String colorCode() {
+            return colorCode;
+        }
+
+        public Integer x0() {
+            return x0;
+        }
+
+        public Integer y0() {
+            return y0;
+        }
+
+        public int layer() {
+            return layer;
+        }
+
+        public Queue.ListQueue<Integer> xVector() {
+            return xVector;
+        }
+
+        public Queue.ListQueue<Integer> yVector() {
+            return yVector;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (PointsHolder) obj;
+            return Objects.equals(this.colorCode, that.colorCode) &&
+                    Objects.equals(this.x0, that.x0) &&
+                    Objects.equals(this.y0, that.y0) &&
+                    this.layer == that.layer &&
+                    Objects.equals(this.xVector, that.xVector) &&
+                    Objects.equals(this.yVector, that.yVector);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(colorCode, x0, y0, layer, xVector, yVector);
+        }
+
+        @Override
+        public String toString() {
+            return "PointsHolder[" +
+                    "colorCode=" + colorCode + ", " +
+                    "x0=" + x0 + ", " +
+                    "y0=" + y0 + ", " +
+                    "layer=" + layer + ", " +
+                    "xVector=" + xVector + ", " +
+                    "yVector=" + yVector + ']';
+        }
+
     }
 
     private static class FillMatrixRecursiveTask extends RecursiveAction {
 
         private final String[][] matrix;
-        private final PointQueue pointQueue;
+        private final List<PointsHolder> pointsHolder;
 
-        FillMatrixRecursiveTask(String[][] matrix, PointQueue pointQueue) {
+        FillMatrixRecursiveTask(String[][] matrix, PointsHolder pointsHolder) {
             this.matrix = matrix;
-            this.pointQueue = pointQueue;
+            this.pointsHolder = List.of(pointsHolder);
         }
 
         @Override
         protected void compute() {
-            //Первая строка
-            Integer y0 = pointQueue.yQueue.poll();
-
-            // Пока строки есть - заходим в рекурсию
-            if (y0 != null) {
-
-                //Спускаемся дальше по рекурсии
-                new FillMatrixRecursiveTask(this.matrix, this.pointQueue).fork().join();
-
-                //итеративно заполняем строку значениями
-                fillLine(y0);
-            }
+            pointsHolder.stream().map(ph -> {
+                        return CompletableFuture.runAsync(() -> {
+                            Integer y0 = ph.yVector.poll();
+                            // Пока строки есть - заходим в рекурсию
+                            if (y0 != null) {
+                                //Спускаемся дальше по рекурсии
+                                FillMatrixRecursiveTask childTask = new FillMatrixRecursiveTask(this.matrix, ph);
+                                childTask.fork();
+                                //итеративно заполняем строку значениями
+                                fillLine(y0, ph.xVector, ph.colorCode);
+                                childTask.join();
+                            }
+                        });
+                    })
+                    .forEach(CompletableFuture::join);
 
         }
 
-        private void fillLine(Integer y0) {
-            for (Integer point : pointQueue.xQueue) {
+        private void fillLine(Integer y0, Queue.ListQueue<Integer> xVector, String colorCode) {
+            for (Integer point : xVector) {
                 // Лежит ли существующая точка в координатной плоскость
                 boolean isNotOutOfWindowForY = y0 > -1 && matrix.length > y0;
                 boolean isNotOutOfWindowForX = point > -1 && matrix[y0].length > point;
+                boolean isEmpty = Objects.equals(matrix[y0][point], EMPTY_EMMIT);
 
                 // 1) точки которые нужно внести в матрицу существуют.
                 // 2) точки лежат в пределах окна.
                 if (isNotOutOfWindowForY && isNotOutOfWindowForX) {
                     // TODO: Пока что оставим объекты одного цвета
-                    matrix[y0][point] = pointQueue.colorCode + EMMIT + AnsiColors.ANSI_RESET.colorCode;
+                    matrix[y0][point] = colorCode + EMMIT + AnsiColors.ANSI_RESET.colorCode;
                 }
             }
         }
