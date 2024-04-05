@@ -14,18 +14,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Queue;
 
-public abstract class AbstractGame<GAME_CONTEXT extends GameContext> implements Runnable {
+public abstract class AbstractGame<INPUT, OUTPUT, GAME_CONTEXT extends GameContext<INPUT, OUTPUT>> implements Runnable {
 
     protected final Queue<ActionVisitor> actionVisitorQueue = new LinkedListQueue<>();
-    protected final InputProcessor inputProcessor;
-    protected final DrawProcessor<GAME_CONTEXT> drawProcessor;
+    protected final InputProcessor<INPUT> inputProcessor;
+    protected final DrawProcessor<OUTPUT> drawProcessor;
+    //TODO: Для расширения стратегии вывода требуется какой нибудь типа OutputProcessor
     protected final OutputStream outputStream;
     protected final InputStream inputStream;
     protected final GAME_CONTEXT context;
 
     protected AbstractGame(GAME_CONTEXT context,
-                           InputProcessor inputProcessor,
-                           DrawProcessor<GAME_CONTEXT> drawProcessor,
+                           InputProcessor<INPUT> inputProcessor,
+                           DrawProcessor<OUTPUT> drawProcessor,
                            OutputStream outputStream,
                            InputStream inputStream) {
 
@@ -58,7 +59,11 @@ public abstract class AbstractGame<GAME_CONTEXT extends GameContext> implements 
     protected void drawFrame() {
         try {
             clearAndFlush();
-            drawProcessor.drawFrame(context, outputStream);
+            OUTPUT output = drawProcessor.drawFrame(context.buildViews(), context.getGameWindowSize());
+            //TODO: Прям точно нужен процессор вывода
+            if (output instanceof String) {
+                outputStream.write(((String) output).getBytes());
+            }
         } catch (Exception e) {
             throw new DrawFrameException(e);
         }
@@ -85,7 +90,6 @@ public abstract class AbstractGame<GAME_CONTEXT extends GameContext> implements 
             throw new ProcessInputException(e);
         }
     }
-
 
 
 }

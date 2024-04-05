@@ -2,29 +2,25 @@ package ru.apzakharov.draw_processor;
 
 import lombok.Builder;
 import lombok.Getter;
-import ru.apzakharov.context.CommandLineGameContext;
 import ru.apzakharov.data_structure.abstract_structure.Pair;
-import ru.apzakharov.data_structure.abstract_structure.Queue;
-import ru.apzakharov.data_structure.structure.LinkedListQueue;
+import ru.apzakharov.data_structure.structure.PairImpl;
+import ru.apzakharov.gamecore.context.GameContext;
 import ru.apzakharov.gamecore.draw_processor.DrawProcessor;
 import ru.apzakharov.input_processor.AnsiColors;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static ru.apzakharov.draw_processor.Axis.X;
-import static ru.apzakharov.draw_processor.Axis.Y;
+import static ru.apzakharov.draw_processor.Axis.*;
 
-public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> {
-    public static final String EMMIT = "*";
+public class CommandLineDrawer implements DrawProcessor<String> {
+    public static final String EMMIT = " * ";
     public static final String EMPTY_EMMIT = AnsiColors.ANSI_WHITE.colorCode + " ~ " + AnsiColors.ANSI_RESET.colorCode;
 
     @Override
-    public String drawFrame(CommandLineGameContext context) {
+    public String drawFrame(Set<GameContext.ObjectView<String>> contextObjectViews, Pair<Integer, Integer> gameWindowSize) {
         /*
          TODO: Нужно сначала разместить в декартовой плоскости объекты по их состоянию (x1-x2,y1-y2)
                А после привести к нужному масштабу, который определяются размерами открытого консольного окна
@@ -32,15 +28,14 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
                Но это потом, пока считаем, что масштабы совпадают
          */
 
-        final String[][] drawMatrix = preFillMatrix(context);
+        final String[][] drawMatrix = preFillMatrix(gameWindowSize);
 
-        fillWindowMatrix(context, drawMatrix);
+        fillWindowMatrix(contextObjectViews, drawMatrix);
 
         return buildFrame(drawMatrix);
     }
 
-    private static String[][] preFillMatrix(CommandLineGameContext context) {
-        final Pair<Integer, Integer> gameWindowSize = context.getGameWindowSize();
+    private static String[][] preFillMatrix(Pair<Integer, Integer> gameWindowSize) {
         String[][] matrix = new String[gameWindowSize.getLeft()][gameWindowSize.getRight()];
         for (int i = 0; i < matrix.length; i++) {
             matrix[i] = new String[gameWindowSize.getRight()];
@@ -55,17 +50,19 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
                 .collect(Collectors.joining("\n"));
     }
 
-    private void fillWindowMatrix(CommandLineGameContext context, String[][] drawMatrix) {
+    private void fillWindowMatrix(Set<GameContext.ObjectView<String>> contextObjectViews, String[][] drawMatrix) {
         try (ForkJoinPool forkJoinPool = ForkJoinPool.commonPool()) {
-            final Map<Integer, List<PointsHolder>> pointsByLayers = getPointQueueStream(context)
-                    .collect(Collectors.groupingBy(PointsHolder::getLayer, Collectors.toList()));
+            final Map<Pair<Integer, Integer>, List<PointsHolder>> pointsByLayers = getPointQueueStream(contextObjectViews)
+                    .collect(Collectors.groupingBy(ph -> vectorBorders(ph.zVector), Collectors.toList()));
 
-            pointsByLayers.keySet().forEach(key -> {
-                pointsByLayers.get(key)
-                        .forEach(pointsHolder -> {
-                            forkJoinPool.invoke(new FillMatrixRecursiveTask(drawMatrix, pointsHolder));
-                        });
-            });
+            pointsByLayers.keySet().stream()
+                    .sorted(Comparator.comparingInt(Pair::getLeft))
+                    .forEachOrdered(key -> {
+                        pointsByLayers.get(key)
+                                .forEach(pointsHolder -> {
+                                    forkJoinPool.invoke(new FillMatrixRecursiveTask(drawMatrix, pointsHolder));
+                                });
+                    });
 
 
 //
@@ -74,36 +71,42 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
         }
     }
 
-    private Stream<PointsHolder> getPointQueueStream(CommandLineGameContext context) {
-        return context.getContextObjectViews().stream()
+    private Stream<PointsHolder> getPointQueueStream(Set<GameContext.ObjectView<String>> contextObjectViews) {
+        return contextObjectViews.stream()
                 .map(view ->
                         PointsHolder.builder()
                                 .xVector(getPoints(view, X))
                                 .yVector(getPoints(view, Y))
+                                .zVector(getPoints(view, Z))
                                 .colorCode(view.getColorCode())
-                                .layer(view.getLayer())
                                 .build())
                 .sorted(compareObjects());
     }
 
     private static Comparator<PointsHolder> compareObjects() {
         return Comparator.<PointsHolder>comparingInt(pointsHolder -> pointsHolder.yVector.peek())
-                .thenComparing(pointsHolder -> pointsHolder.xVector.peek());
+                .thenComparing(pointsHolder -> pointsHolder.xVector.peek())
+                .thenComparing(pointsHolder -> pointsHolder.zVector.peek());
     }
 
-    private Queue.ListQueue<Integer> getPoints(CommandLineGameContext.CommandLineObjectView view, Axis axis) {
-        final LinkedListQueue<Integer> queuePoint = new LinkedListQueue<>();
+    private java.util.Deque<Integer> getPoints(GameContext.ObjectView<String> view, Axis axis) {
+        final java.util.Deque<Integer> queuePoint = new ConcurrentLinkedDeque<>();
+        ;
         switch (axis) {
             case X:
                 buildQueue(view.getX1(), view.getX2(), queuePoint);
                 break;
             case Y:
                 buildQueue(view.getY1(), view.getY2(), queuePoint);
+                break;
+            case Z:
+                buildQueue(view.getZ1(), view.getZ2(), queuePoint);
+                break;
         }
         return queuePoint;
     }
 
-    private static void buildQueue(int point0, int point1, LinkedListQueue<Integer> pointsVector) {
+    private static void buildQueue(int point0, int point1, java.util.Deque<Integer> pointsVector) {
         for (int i = point0; i <= point1; i++) {
             pointsVector.offer(i);
         }
@@ -116,16 +119,17 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
         private final String colorCode;
         private final Integer x0;
         private final Integer y0;
-        private final int layer;
-        private final Queue.ListQueue<Integer> xVector;
-        private final Queue.ListQueue<Integer> yVector;
+        private java.util.Deque<Integer> xVector = new ConcurrentLinkedDeque<>();
+        private java.util.Deque<Integer> yVector = new ConcurrentLinkedDeque<>();
+        private java.util.Deque<Integer> zVector = new ConcurrentLinkedDeque<>();
+        ;
 
-        private PointsHolder(String colorCode, Integer x0, Integer y0, int layer, Queue.ListQueue<Integer> xVector,
-                             Queue.ListQueue<Integer> yVector) {
+        private PointsHolder(String colorCode, Integer x0, Integer y0, java.util.Deque<Integer> xVector,
+                             java.util.Deque<Integer> yVector, java.util.Deque<Integer> zVector) {
             this.colorCode = colorCode;
             this.x0 = x0;
             this.y0 = y0;
-            this.layer = layer;
+            this.zVector = zVector;
             this.xVector = xVector;
             this.yVector = yVector;
         }
@@ -142,62 +146,34 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
             return y0;
         }
 
-        public int layer() {
-            return layer;
-        }
-
-        public Queue.ListQueue<Integer> xVector() {
+        public java.util.Deque<Integer> xVector() {
             return xVector;
         }
 
-        public Queue.ListQueue<Integer> yVector() {
+        public java.util.Deque<Integer> yVector() {
             return yVector;
         }
 
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (PointsHolder) obj;
-            return Objects.equals(this.colorCode, that.colorCode) &&
-                    Objects.equals(this.x0, that.x0) &&
-                    Objects.equals(this.y0, that.y0) &&
-                    this.layer == that.layer &&
-                    Objects.equals(this.xVector, that.xVector) &&
-                    Objects.equals(this.yVector, that.yVector);
+        public java.util.Deque<Integer> zVector() {
+            return zVector;
         }
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(colorCode, x0, y0, layer, xVector, yVector);
-        }
-
-        @Override
-        public String toString() {
-            return "PointsHolder[" +
-                    "colorCode=" + colorCode + ", " +
-                    "x0=" + x0 + ", " +
-                    "y0=" + y0 + ", " +
-                    "layer=" + layer + ", " +
-                    "xVector=" + xVector + ", " +
-                    "yVector=" + yVector + ']';
-        }
 
     }
 
     private static class FillMatrixRecursiveTask extends RecursiveAction {
 
         private final String[][] matrix;
-        private final List<PointsHolder> pointsHolder;
+        private final List<PointsHolder> pointsHolders;
 
-        FillMatrixRecursiveTask(String[][] matrix, PointsHolder pointsHolder) {
+        FillMatrixRecursiveTask(String[][] matrix, PointsHolder pointsHolders) {
             this.matrix = matrix;
-            this.pointsHolder = List.of(pointsHolder);
+            this.pointsHolders = List.of(pointsHolders);
         }
 
         @Override
         protected void compute() {
-            pointsHolder.stream().map(ph -> {
+            pointsHolders.stream().map(ph -> {
                         return CompletableFuture.runAsync(() -> {
                             Integer y0 = ph.yVector.poll();
                             // Пока строки есть - заходим в рекурсию
@@ -211,16 +187,23 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
                             }
                         });
                     })
-                    .forEach(CompletableFuture::join);
-
+                    .forEach(cf -> {
+                        try {
+                            cf.join();
+                            cf.get();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        } catch (ExecutionException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
         }
 
-        private void fillLine(Integer y0, Queue.ListQueue<Integer> xVector, String colorCode) {
+        private void fillLine(Integer y0, java.util.Deque<Integer> xVector, String colorCode) {
             for (Integer point : xVector) {
-                // Лежит ли существующая точка в координатной плоскость
+                // Лежит ли существующая точка в видимой плоскости
                 boolean isNotOutOfWindowForY = y0 > -1 && matrix.length > y0;
                 boolean isNotOutOfWindowForX = point > -1 && matrix[y0].length > point;
-                boolean isEmpty = Objects.equals(matrix[y0][point], EMPTY_EMMIT);
 
                 // 1) точки которые нужно внести в матрицу существуют.
                 // 2) точки лежат в пределах окна.
@@ -230,6 +213,12 @@ public class CommandLineDrawer implements DrawProcessor<CommandLineGameContext> 
                 }
             }
         }
+    }
+
+    static Pair<Integer, Integer> vectorBorders(Deque<Integer> vector) {
+        return vector.peek() != null ?
+                new PairImpl<>(vector.peekFirst(), vector.peekLast())
+                : new PairImpl<>(0, 0);
     }
 
 }

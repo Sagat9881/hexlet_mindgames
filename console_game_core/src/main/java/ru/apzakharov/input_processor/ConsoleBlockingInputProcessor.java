@@ -11,7 +11,7 @@ import java.io.InputStream;
 
 @Log4j2
 //TODO: Нужен еще один класс, который не будет блокировать поток во время чтения
-public class ConsoleBlockingInputProcessor implements InputProcessor {
+public class ConsoleBlockingInputProcessor implements InputProcessor<String> {
     /* volatile - если вдруг будем работать с полем в многопоточке,
               то это ключевое слово поможет избежать грязного и фантомного чтения значения переменной
               Впрочем, можно и просто подготовить саму структуру для работы в многопоточке

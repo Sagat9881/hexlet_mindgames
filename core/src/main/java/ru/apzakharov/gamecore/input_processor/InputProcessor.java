@@ -3,10 +3,10 @@ package ru.apzakharov.gamecore.input_processor;
 
 import java.io.InputStream;
 
-public interface InputProcessor {
+public interface InputProcessor<INPUT_TYPE> {
 
 
-   Input<?> getInput();
+   Input<INPUT_TYPE> getInput();
 
     void awaitAndBuildInput(InputStream inputStream);
 

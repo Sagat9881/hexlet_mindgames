@@ -3,7 +3,7 @@ package ru.apzakharov.data_structure.abstract_structure;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-public interface Queue<E> {
+public interface Queue<E> extends java.util.Queue<E>{
     /**
      * <p>Возвращает элемент из головы очереди. Элемент не удаляется.</p>
      * Если очередь пуста, инициируется исключение NoSuchElementException.

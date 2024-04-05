@@ -1,18 +1,14 @@
 package ru.apzakharov.gamecore.draw_processor;
 
+import ru.apzakharov.data_structure.abstract_structure.Pair;
 import ru.apzakharov.gamecore.context.GameContext;
+import ru.apzakharov.gamecore.context.GameObject;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.util.Set;
 
-public interface DrawProcessor<C extends GameContext> {
-    default void drawFrame(C context, OutputStream outputStream) {
-        try {
-            outputStream.write(drawFrame(context).getBytes());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+public interface DrawProcessor<FRAME_CONTAINER> {
 
-    String drawFrame(C context);
+
+    FRAME_CONTAINER drawFrame(Set<GameContext.ObjectView<FRAME_CONTAINER>> views, Pair<Integer, Integer> gameWindowSize);
 }

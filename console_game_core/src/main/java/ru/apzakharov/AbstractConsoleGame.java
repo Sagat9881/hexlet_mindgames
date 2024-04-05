@@ -7,11 +7,11 @@ import ru.apzakharov.input_processor.ConsoleBlockingInputProcessor;
 
 import java.io.IOException;
 
-public abstract class AbstractConsoleGame<GAME_CONTEXT extends CommandLineGameContext> extends AbstractGame<GAME_CONTEXT> {
+public abstract class AbstractConsoleGame<GAME_CONTEXT extends CommandLineGameContext> extends AbstractGame<String, String, CommandLineGameContext> {
 
 //    final Atlas<String> atlas;
 
-    protected AbstractConsoleGame(GAME_CONTEXT context, ConsoleBlockingInputProcessor inputProcessor, DrawProcessor<GAME_CONTEXT> drawProcessor) {
+    protected AbstractConsoleGame(GAME_CONTEXT context, ConsoleBlockingInputProcessor inputProcessor, DrawProcessor<String> drawProcessor) {
         super(context, inputProcessor, drawProcessor, System.out, System.in);
     }
 
