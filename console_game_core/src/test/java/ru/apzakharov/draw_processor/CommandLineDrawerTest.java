@@ -48,7 +48,8 @@ class CommandLineDrawerTest {
 
     @Test
     void drawFrame3D() {
-        GameContext.ObjectView<String> view = new GameContext.ObjectView<>(AnsiColors.ANSI_BLUE.colorCode, 3, 12, 6, 9, 0, 6);
+        GameContext.ObjectView<String> view =
+                new GameContext.ObjectView<>(AnsiColors.ANSI_BLUE.colorCode, 0, 4, 6, 9, 0, 3);
         context = new TestCommandLineContext(view);
         String drawFrame = drawer.drawFrame(context.buildViews(),context.getGameWindowSize());
         System.out.println(drawFrame);

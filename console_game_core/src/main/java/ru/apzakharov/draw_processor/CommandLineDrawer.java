@@ -133,32 +133,6 @@ public class CommandLineDrawer implements DrawProcessor<String> {
             this.xVector = xVector;
             this.yVector = yVector;
         }
-
-        public String colorCode() {
-            return colorCode;
-        }
-
-        public Integer x0() {
-            return x0;
-        }
-
-        public Integer y0() {
-            return y0;
-        }
-
-        public java.util.Deque<Integer> xVector() {
-            return xVector;
-        }
-
-        public java.util.Deque<Integer> yVector() {
-            return yVector;
-        }
-
-        public java.util.Deque<Integer> zVector() {
-            return zVector;
-        }
-
-
     }
 
     private static class FillMatrixRecursiveTask extends RecursiveAction {
@@ -173,16 +147,17 @@ public class CommandLineDrawer implements DrawProcessor<String> {
 
         @Override
         protected void compute() {
-            pointsHolders.stream().map(ph -> {
+            pointsHolders.stream().map(pointsHolder -> {
                         return CompletableFuture.runAsync(() -> {
-                            Integer y0 = ph.yVector.poll();
-                            // Пока строки есть - заходим в рекурсию
-                            if (y0 != null) {
-                                //Спускаемся дальше по рекурсии
-                                FillMatrixRecursiveTask childTask = new FillMatrixRecursiveTask(this.matrix, ph);
+                            Integer z = pointsHolder.zVector.poll();
+                            if (z != null) {
+                                FillMatrixRecursiveTask childTask = new FillMatrixRecursiveTask(this.matrix, pointsHolder);
+                                for (Integer y : pointsHolder.yVector) {
+                                    final int xCamera = matrix[y].length / 2;
+                                    fillLine(y, z, xCamera, pointsHolder.xVector, pointsHolder.colorCode);
+                                    // Дожидаемся отрисовки плоскости
+                                }
                                 childTask.fork();
-                                //итеративно заполняем строку значениями
-                                fillLine(y0, ph.xVector, ph.colorCode);
                                 childTask.join();
                             }
                         });
@@ -199,17 +174,24 @@ public class CommandLineDrawer implements DrawProcessor<String> {
                     });
         }
 
-        private void fillLine(Integer y0, java.util.Deque<Integer> xVector, String colorCode) {
+        private void fillLine(Integer y, Integer z, Integer xCamera, Deque<Integer> xVector, String colorCode) {
             for (Integer point : xVector) {
-                // Лежит ли существующая точка в видимой плоскости
-                boolean isNotOutOfWindowForY = y0 > -1 && matrix.length > y0;
-                boolean isNotOutOfWindowForX = point > -1 && matrix[y0].length > point;
+                final int offsetX;
+                final int offsetY = y - z;
+                if (point > xCamera) {
+                    // Лежит ли существующая точка в видимой плоскости
+                    offsetX = point - z;
+                } else {
+                    offsetX = point + z;
+                }
 
+                final boolean isNotOutOfWindowForY = offsetY > -1 && matrix.length > offsetY;
+                final boolean isNotOutOfWindowForX = offsetX > -1 && matrix[y].length > offsetX;
                 // 1) точки которые нужно внести в матрицу существуют.
                 // 2) точки лежат в пределах окна.
                 if (isNotOutOfWindowForY && isNotOutOfWindowForX) {
                     // TODO: Пока что оставим объекты одного цвета
-                    matrix[y0][point] = colorCode + EMMIT + AnsiColors.ANSI_RESET.colorCode;
+                    matrix[offsetY][offsetX] = colorCode + EMMIT + AnsiColors.ANSI_RESET.colorCode;
                 }
             }
         }
