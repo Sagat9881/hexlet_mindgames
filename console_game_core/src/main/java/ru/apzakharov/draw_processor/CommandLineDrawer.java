@@ -2,6 +2,7 @@ package ru.apzakharov.draw_processor;
 
 import lombok.Builder;
 import lombok.Getter;
+import ru.apzakharov.context.CommandLineGameContext;
 import ru.apzakharov.data_structure.abstract_structure.Pair;
 import ru.apzakharov.data_structure.structure.PairImpl;
 import ru.apzakharov.gamecore.context.GameContext;
@@ -20,7 +21,7 @@ public class CommandLineDrawer implements DrawProcessor<String> {
     public static final String EMPTY_EMMIT = AnsiColors.ANSI_WHITE.colorCode + " ~ " + AnsiColors.ANSI_RESET.colorCode;
 
     @Override
-    public String drawFrame(Set<GameContext.ObjectView<String>> contextObjectViews, Pair<Integer, Integer> gameWindowSize) {
+    public String drawFrame(Set<GameContext.ObjectView<String, String>> contextObjectViews, Pair<Integer, Integer> gameWindowSize) {
         /*
          TODO: Нужно сначала разместить в декартовой плоскости объекты по их состоянию (x1-x2,y1-y2)
                А после привести к нужному масштабу, который определяются размерами открытого консольного окна
@@ -50,7 +51,7 @@ public class CommandLineDrawer implements DrawProcessor<String> {
                 .collect(Collectors.joining("\n"));
     }
 
-    private void fillWindowMatrix(Set<GameContext.ObjectView<String>> contextObjectViews, String[][] drawMatrix) {
+    private void fillWindowMatrix(Set<GameContext.ObjectView<String, String>> contextObjectViews, String[][] drawMatrix) {
         try (ForkJoinPool forkJoinPool = ForkJoinPool.commonPool()) {
             final Map<Pair<Integer, Integer>, List<PointsHolder>> pointsByLayers = getPointQueueStream(contextObjectViews)
                     .collect(Collectors.groupingBy(ph -> vectorBorders(ph.zVector), Collectors.toList()));
@@ -71,14 +72,14 @@ public class CommandLineDrawer implements DrawProcessor<String> {
         }
     }
 
-    private Stream<PointsHolder> getPointQueueStream(Set<GameContext.ObjectView<String>> contextObjectViews) {
+    private Stream<PointsHolder> getPointQueueStream(Set<GameContext.ObjectView<String, String>> contextObjectViews) {
         return contextObjectViews.stream()
                 .map(view ->
                         PointsHolder.builder()
                                 .xVector(getPoints(view, X))
                                 .yVector(getPoints(view, Y))
                                 .zVector(getPoints(view, Z))
-                                .colorCode(view.getColorCode())
+                                .coloredEmmit(view.getColorCode() + view.getTexture() + AnsiColors.ANSI_RESET.colorCode)
                                 .build())
                 .sorted(compareObjects());
     }
@@ -89,7 +90,7 @@ public class CommandLineDrawer implements DrawProcessor<String> {
                 .thenComparing(pointsHolder -> pointsHolder.zVector.peek());
     }
 
-    private java.util.Deque<Integer> getPoints(GameContext.ObjectView<String> view, Axis axis) {
+    private java.util.Deque<Integer> getPoints(GameContext.ObjectView<String, String> view, Axis axis) {
         final java.util.Deque<Integer> queuePoint = new ConcurrentLinkedDeque<>();
         ;
         switch (axis) {
@@ -116,48 +117,22 @@ public class CommandLineDrawer implements DrawProcessor<String> {
     @Builder
     @Getter
     private static final class PointsHolder {
-        private final String colorCode;
+        private final String coloredEmmit;
         private final Integer x0;
         private final Integer y0;
         private java.util.Deque<Integer> xVector = new ConcurrentLinkedDeque<>();
         private java.util.Deque<Integer> yVector = new ConcurrentLinkedDeque<>();
         private java.util.Deque<Integer> zVector = new ConcurrentLinkedDeque<>();
-        ;
 
-        private PointsHolder(String colorCode, Integer x0, Integer y0, java.util.Deque<Integer> xVector,
+        private PointsHolder(String coloredEmmit, Integer x0, Integer y0, java.util.Deque<Integer> xVector,
                              java.util.Deque<Integer> yVector, java.util.Deque<Integer> zVector) {
-            this.colorCode = colorCode;
+            this.coloredEmmit = coloredEmmit;
             this.x0 = x0;
             this.y0 = y0;
             this.zVector = zVector;
             this.xVector = xVector;
             this.yVector = yVector;
         }
-
-        public String colorCode() {
-            return colorCode;
-        }
-
-        public Integer x0() {
-            return x0;
-        }
-
-        public Integer y0() {
-            return y0;
-        }
-
-        public java.util.Deque<Integer> xVector() {
-            return xVector;
-        }
-
-        public java.util.Deque<Integer> yVector() {
-            return yVector;
-        }
-
-        public java.util.Deque<Integer> zVector() {
-            return zVector;
-        }
-
 
     }
 
@@ -182,7 +157,7 @@ public class CommandLineDrawer implements DrawProcessor<String> {
                                 FillMatrixRecursiveTask childTask = new FillMatrixRecursiveTask(this.matrix, ph);
                                 childTask.fork();
                                 //итеративно заполняем строку значениями
-                                fillLine(y0, ph.xVector, ph.colorCode);
+                                fillLine(y0, ph.xVector, ph.coloredEmmit);
                                 childTask.join();
                             }
                         });
@@ -191,25 +166,22 @@ public class CommandLineDrawer implements DrawProcessor<String> {
                         try {
                             cf.join();
                             cf.get();
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        } catch (ExecutionException e) {
+                        } catch (InterruptedException | ExecutionException e) {
                             throw new RuntimeException(e);
                         }
                     });
         }
 
-        private void fillLine(Integer y0, java.util.Deque<Integer> xVector, String colorCode) {
+        private void fillLine(Integer y0, java.util.Deque<Integer> xVector, String coloredEmmit) {
             for (Integer point : xVector) {
                 // Лежит ли существующая точка в видимой плоскости
                 boolean isNotOutOfWindowForY = y0 > -1 && matrix.length > y0;
                 boolean isNotOutOfWindowForX = point > -1 && matrix[y0].length > point;
 
-                // 1) точки которые нужно внести в матрицу существуют.
-                // 2) точки лежат в пределах окна.
+                // 2) точка лежат в пределах окна.
                 if (isNotOutOfWindowForY && isNotOutOfWindowForX) {
-                    // TODO: Пока что оставим объекты одного цвета
-                    matrix[y0][point] = colorCode + EMMIT + AnsiColors.ANSI_RESET.colorCode;
+                    // TODO: Пока что оставим одноцветные объекты
+                    matrix[y0][point] = coloredEmmit;
                 }
             }
         }

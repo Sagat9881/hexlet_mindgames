@@ -1,8 +1,7 @@
 package ru.apzakharov.gamecore;
 
-import ru.apzakharov.data_structure.structure.LinkedListQueue;
-import ru.apzakharov.gamecore.action.ActionVisitor;
 import ru.apzakharov.gamecore.context.GameContext;
+import ru.apzakharov.gamecore.context.entites.GameEntity;
 import ru.apzakharov.gamecore.draw_processor.DrawProcessor;
 import ru.apzakharov.gamecore.exception.DoActionException;
 import ru.apzakharov.gamecore.exception.DrawFrameException;
@@ -13,13 +12,14 @@ import ru.apzakharov.gamecore.input_processor.InputProcessor;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public abstract class AbstractGame<INPUT, OUTPUT, GAME_CONTEXT extends GameContext<INPUT, OUTPUT>> implements Runnable {
 
-    protected final Queue<ActionVisitor> actionVisitorQueue = new LinkedListQueue<>();
+    protected final Queue<GameEntity<?>> entities = new ConcurrentLinkedDeque<>();
     protected final InputProcessor<INPUT> inputProcessor;
     protected final DrawProcessor<OUTPUT> drawProcessor;
-    //TODO: Для расширения стратегии вывода требуется какой нибудь типа OutputProcessor
+    //TODO: Для расширения стратегии вывода требуется какой-нибудь типа OutputProcessor
     protected final OutputStream outputStream;
     protected final InputStream inputStream;
     protected final GAME_CONTEXT context;
@@ -71,7 +71,9 @@ public abstract class AbstractGame<INPUT, OUTPUT, GAME_CONTEXT extends GameConte
 
     protected void processAction() {
         try {
-            actionVisitorQueue.forEach(context::visitForAction);
+            entities.parallelStream()
+                    .map(GameEntity::getActions)
+                    .forEach(queue -> queue.forEach((context::visitForAction)));
         } catch (Exception e) {
             throw new DoActionException(e);
         }

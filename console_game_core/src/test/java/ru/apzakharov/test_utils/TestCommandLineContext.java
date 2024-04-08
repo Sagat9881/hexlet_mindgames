@@ -1,13 +1,11 @@
 package ru.apzakharov.test_utils;
 
 import ru.apzakharov.context.CommandLineGameContext;
+import ru.apzakharov.context.entites.ConsoleGameEntity;
 import ru.apzakharov.data_structure.abstract_structure.Pair;
 import ru.apzakharov.data_structure.structure.PairImpl;
-import ru.apzakharov.draw_processor.CommandLineDrawer;
 import ru.apzakharov.gamecore.context.GameContext;
-import ru.apzakharov.gamecore.context.GameObject;
 import ru.apzakharov.gamecore.input_processor.InputProcessor;
-import ru.apzakharov.input_processor.ConsoleBlockingInputProcessor;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -16,27 +14,30 @@ import java.util.stream.Collectors;
 
 public class TestCommandLineContext implements CommandLineGameContext {
 
-    private Set<GameContext.ObjectView<String>> viewMock;
-    private Set<GameObject> gameObjectSet = new HashSet<>();
+    private Set<GameContext.ObjectView<String, String>> viewMock;
+    private Set<ConsoleGameEntity> gameEntitySet = new HashSet<>();
 
-
-
-    public TestCommandLineContext(ObjectView<String> viewMock) {
+    public TestCommandLineContext(ObjectView<String, String> viewMock) {
         this.viewMock = Set.of(viewMock);
     }
+
     public TestCommandLineContext(CommandLineObjectView... viewMocks) {
         this.viewMock = Arrays.stream(viewMocks).collect(Collectors.toSet());
     }
 
     @Override
-    public void offerInput(InputProcessor.Input<String> input) {
+    public void offerInput(InputProcessor.Input<String> input) {    }
 
+    @Override
+    public void addGameInstance(ConsoleGameEntity gameInstance) {
+        gameEntitySet.add(gameInstance);
     }
 
     @Override
-    public void addContextObject(GameObject object) {
-        gameObjectSet.add(object);
+    public boolean isInstanceAdded(ConsoleGameEntity gameInstance) {
+        return false;
     }
+
 
     @Override
     public Pair<Integer, Integer> getGameWindowSize() {
@@ -44,8 +45,10 @@ public class TestCommandLineContext implements CommandLineGameContext {
     }
 
     @Override
-    public Set<ObjectView<String>> buildViews() {
-        return viewMock;
+    public Set<ObjectView<String, String>> buildViews() {
+        return gameEntitySet.stream().map(this::buildView).collect(Collectors.toSet());
     }
+
+
 
 }

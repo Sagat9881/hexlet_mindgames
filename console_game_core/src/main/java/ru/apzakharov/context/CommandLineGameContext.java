@@ -2,24 +2,42 @@ package ru.apzakharov.context;
 
 import lombok.Getter;
 import lombok.Setter;
+import ru.apzakharov.context.entites.ConsoleGameEntity;
+import ru.apzakharov.data_structure.abstract_structure.Pair;
 import ru.apzakharov.gamecore.context.GameContext;
-import ru.apzakharov.gamecore.draw_processor.DrawProcessor;
-import ru.apzakharov.gamecore.input_processor.InputProcessor;
+import ru.apzakharov.gamecore.context.entites.GameEntity;
 
-import java.util.Set;
+public interface CommandLineGameContext extends GameContext<String, String, ConsoleGameEntity> {
 
-public interface CommandLineGameContext extends GameContext<String, String> {
+    @Override
+    default CommandLineObjectView buildView(ConsoleGameEntity entity) {
+        Pair<Integer, Integer> x = entity.getX();
+        Pair<Integer, Integer> y = entity.getY();
+        Pair<Integer, Integer> z = entity.getZ();
+        String texture = entity.getTexture();
+        String colorCode = entity.getColorCode();
+
+        return new CommandLineObjectView(
+                colorCode,
+                texture,
+                z.getLeft(),
+                x.getLeft(),
+                x.getRight(),
+                y.getLeft(),
+                y.getRight()
+        );
+    }
 
 
     @Getter
     @Setter
-    class CommandLineObjectView extends GameContext.ObjectView<String> {
+    class CommandLineObjectView extends GameContext.ObjectView<String, String> {
         private int x1, x2;
         private int y1, y2;
         private int layer;
 
-        public CommandLineObjectView(String colorCode, int layer, int x1, int x2, int y1, int y2) {
-            super(colorCode, x1, x2, y1, y2, layer, layer);
+        public CommandLineObjectView(String colorCode, String texture, int layer, int x1, int x2, int y1, int y2) {
+            super(colorCode, texture, x1, x2, y1, y2, layer, layer);
             this.layer = layer;
         }
     }

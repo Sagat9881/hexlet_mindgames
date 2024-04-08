@@ -25,4 +25,9 @@ public enum AnsiColors {
     AnsiColors(String colorCode) {
         this.colorCode = colorCode;
     }
+
+    @Override
+    public String toString() {
+        return colorCode;
+    }
 }
