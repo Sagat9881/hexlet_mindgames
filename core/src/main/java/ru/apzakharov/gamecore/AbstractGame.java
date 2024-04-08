@@ -14,7 +14,8 @@ import java.io.OutputStream;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
-public abstract class AbstractGame<INPUT, OUTPUT, GAME_CONTEXT extends GameContext<INPUT, OUTPUT>> implements Runnable {
+public abstract class AbstractGame<INPUT, OUTPUT,GAME_ENTITY extends GameEntity<GAME_ENTITY>, GAME_CONTEXT extends GameContext<INPUT, OUTPUT,GAME_ENTITY>>
+        implements Runnable {
 
     protected final Queue<GameEntity<?>> entities = new ConcurrentLinkedDeque<>();
     protected final InputProcessor<INPUT> inputProcessor;

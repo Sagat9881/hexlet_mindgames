@@ -1,10 +1,10 @@
 package ru.apzakharov.context.actions.rectangle;
 
+import ru.apzakharov.context.CommandLineGameContext;
 import ru.apzakharov.context.entites.Rectangle2D;
 import ru.apzakharov.context.enums.Direction;
 import ru.apzakharov.data_structure.abstract_structure.Pair;
 import ru.apzakharov.data_structure.structure.PairImpl;
-import ru.apzakharov.gamecore.context.GameContext;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,7 +30,7 @@ public class RectangleMoveAction implements RectangleAction {
 
 
     @Override
-    public void act(GameContext context) {
+    public void act(CommandLineGameContext context) {
         directions.forEach(direction -> {
             switch (direction) {
                 case UP: {
@@ -60,4 +60,5 @@ public class RectangleMoveAction implements RectangleAction {
             }
         });
     }
+
 }

@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 @Builder
-public class Rectangle2D implements ConsoleGameEntity<Rectangle2D> {
-    private final Deque<ActionVisitor<Rectangle2D, ?>> actions = new ConcurrentLinkedDeque<>();
-    private final AtlasProcessor<Rectangle2D, String, ?> atlasProcessor;
+public class Rectangle2D implements ConsoleGameEntity {
+    private final Deque<ActionVisitor<ConsoleGameEntity, ?>> actions = new ConcurrentLinkedDeque<>();
+    private final AtlasProcessor<ConsoleGameEntity, String, ?> atlasProcessor;
     private final String colorCode;
     @Getter
     @Setter
@@ -41,19 +41,20 @@ public class Rectangle2D implements ConsoleGameEntity<Rectangle2D> {
         return new PairImpl<>(z, z);
     }
 
+
     @Override
-    public Deque<ActionVisitor<Rectangle2D, ?>> getActions() {
+    public Deque<ActionVisitor<ConsoleGameEntity, ?>> getActions() {
         return actions;
     }
 
     @Override
-    public void offerAction(ActionVisitor<Rectangle2D, ?> action) {
+    public void offerAction(ActionVisitor<ConsoleGameEntity, ?> action) {
         actions.offer(action);
     }
 
     @Override
-    public void setActions(List<ActionVisitor<Rectangle2D, ?>> action) {
-        action.forEach(actions::offer);
+    public void setActions(List<ActionVisitor<ConsoleGameEntity, ?>> offerdActions) {
+        offerdActions.forEach(actions::offer);
     }
 
     @Override
