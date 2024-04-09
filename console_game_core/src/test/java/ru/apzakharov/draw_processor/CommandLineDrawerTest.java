@@ -3,6 +3,10 @@ package ru.apzakharov.draw_processor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.apzakharov.context.CommandLineGameContext;
+import ru.apzakharov.context.actions.rectangle.RectangleMoveAction;
+import ru.apzakharov.context.entites.Rectangle2D;
+import ru.apzakharov.context.enums.Direction;
+import ru.apzakharov.data_structure.structure.PairImpl;
 import ru.apzakharov.gamecore.context.GameContext;
 import ru.apzakharov.input_processor.AnsiColors;
 import ru.apzakharov.test_utils.TestCommandLineContext;
@@ -27,7 +31,7 @@ class CommandLineDrawerTest {
     }
 
     @Test
-    void drawFrame() {
+    void drawView() {
         CommandLineGameContext.CommandLineObjectView blue =
                 getSimpleCommandLineObjectView(0, 24, 0, 9, 1, AnsiColors.ANSI_BLUE);
         CommandLineGameContext.CommandLineObjectView green =
@@ -55,5 +59,59 @@ class CommandLineDrawerTest {
         String drawFrame = drawer.drawFrame(context.buildViews(), context.getGameWindowSize());
         System.out.println(drawFrame);
     }
+
+    @Test
+    void drawGameEntity() {
+        context = new TestCommandLineContext();
+        Rectangle2D rect = Rectangle2D.builder()
+                .atlasProcessor(null)
+                .x0_x1(new PairImpl<>(1, 10))
+                .y0_y1(new PairImpl<>(9, 6))
+                .z(0).build();
+
+        context.addGameInstance(rect);
+        String drawFrame = drawer.drawFrame(context.buildViews(), context.getGameWindowSize());
+        System.out.println(drawFrame);
+        while (true){
+
+            RectangleMoveAction action = new RectangleMoveAction(rect, Direction.UP);
+            rect.offerAction(action);
+            action.act(context);
+            drawFrame = drawer.drawFrame(context.buildViews(), context.getGameWindowSize());
+            System.out.println(drawFrame+"\n".repeat(6));
+//            System.out.println("\033[H\033[2J");
+
+        }
+
+    }
+
+    @Test
+    void drawGameEntity2() {
+        context = new TestCommandLineContext();
+        Rectangle2D rect = Rectangle2D.builder()
+                .atlasProcessor(null)
+                .x0_x1(new PairImpl<>(1, 4))
+                .y0_y1(new PairImpl<>(9, 6))
+                .z(0).build();
+
+        context.addGameInstance(rect);
+        String drawFrame = drawer.drawFrame(context.buildViews(), context.getGameWindowSize());
+        System.out.println(drawFrame);
+        while (true){
+
+            RectangleMoveAction actionR = new RectangleMoveAction(rect, Direction.RIGHT);
+            RectangleMoveAction actionU = new RectangleMoveAction(rect, Direction.UP);
+            rect.offerAction(actionR);
+            rect.offerAction(actionU);
+            actionR.act(context);
+            actionU.act(context);
+            drawFrame = drawer.drawFrame(context.buildViews(), context.getGameWindowSize());
+//            System.out.println(drawFrame+"\n".repeat(6));
+            System.out.println(drawFrame);
+
+        }
+
+    }
+
 
 }

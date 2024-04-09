@@ -35,7 +35,7 @@ public class TestCommandLineContext implements CommandLineGameContext {
 
     @Override
     public boolean isInstanceAdded(ConsoleGameEntity gameInstance) {
-        return false;
+        return true;
     }
 
 

@@ -37,25 +37,29 @@ public class RectangleMoveAction implements RectangleAction {
                     Pair<Integer, Integer> x = entity.getY();
                     Integer y0 = x.getRight();
                     Integer y1 = x.getLeft();
-                    entity.setY0_y1(new PairImpl<>((y0 + 1), (y1 - 1)));
+                    entity.setY0_y1(new PairImpl<>((y0 - 1), (y1 - 1)));
+                    break;
                 }
                 case DOWN: {
                     Pair<Integer, Integer> x = entity.getY();
                     Integer y0 = x.getRight();
                     Integer y1 = x.getLeft();
-                    entity.setY0_y1(new PairImpl<>((y0 - 1), (y1 + 1)));
+                    entity.setY0_y1(new PairImpl<>((y0 + 1), (y1 + 1)));
+                    break;
                 }
                 case LEFT: {
                     Pair<Integer, Integer> x = entity.getX();
                     Integer x0 = x.getRight();
                     Integer x1 = x.getLeft();
-                    entity.setX0_x1(new PairImpl<>((x0 + 1), (x1 - 1)));
+                    entity.setX0_x1(new PairImpl<>((x0 - 1), (x1 - 1)));
+                    break;
                 }
                 case RIGHT: {
                     Pair<Integer, Integer> x = entity.getX();
                     Integer x0 = x.getRight();
                     Integer x1 = x.getLeft();
-                    entity.setX0_x1(new PairImpl<>((x0 - 1), (x1 + 1)));
+                    entity.setX0_x1(new PairImpl<>((x0 + 1), (x1 + 1)));
+                    break;
                 }
             }
         });

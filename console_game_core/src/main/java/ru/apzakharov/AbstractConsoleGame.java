@@ -1,13 +1,14 @@
 package ru.apzakharov;
 
 import ru.apzakharov.context.CommandLineGameContext;
+import ru.apzakharov.context.entites.ConsoleGameEntity;
 import ru.apzakharov.gamecore.AbstractGame;
 import ru.apzakharov.gamecore.draw_processor.DrawProcessor;
 import ru.apzakharov.input_processor.ConsoleBlockingInputProcessor;
 
 import java.io.IOException;
 
-public abstract class AbstractConsoleGame<GAME_CONTEXT extends CommandLineGameContext> extends AbstractGame<String, String, CommandLineGameContext> {
+public abstract class AbstractConsoleGame<GAME_CONTEXT extends CommandLineGameContext> extends AbstractGame<String, String, ConsoleGameEntity, CommandLineGameContext> {
 
 
     protected AbstractConsoleGame(GAME_CONTEXT context, ConsoleBlockingInputProcessor inputProcessor, DrawProcessor<String> drawProcessor) {

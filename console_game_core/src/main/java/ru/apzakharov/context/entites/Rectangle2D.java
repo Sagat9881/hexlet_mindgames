@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 public class Rectangle2D implements ConsoleGameEntity {
     private final Deque<ActionVisitor<ConsoleGameEntity, ?>> actions = new ConcurrentLinkedDeque<>();
     private final AtlasProcessor<ConsoleGameEntity, String, ?> atlasProcessor;
-    private final String colorCode;
+    private final String colorCode = AnsiColors.ANSI_BLUE.colorCode;
     @Getter
     @Setter
     private Pair<Integer, Integer> x0_x1;
@@ -59,10 +59,11 @@ public class Rectangle2D implements ConsoleGameEntity {
 
     @Override
     public String getTexture() {
-        if (atlasProcessor.checkNext()) {
-            atlasProcessor.next();
-        }
-        return colorCode + atlasProcessor.current() + AnsiColors.ANSI_RESET;
+//        if (atlasProcessor.checkNext()) {
+//            atlasProcessor.next();
+//        }
+//        return colorCode + atlasProcessor.current() + AnsiColors.ANSI_RESET;
+        return  colorCode+ " * " + AnsiColors.ANSI_RESET;
     }
 
     @Override
