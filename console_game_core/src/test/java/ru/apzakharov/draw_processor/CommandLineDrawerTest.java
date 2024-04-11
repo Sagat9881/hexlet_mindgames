@@ -72,13 +72,13 @@ class CommandLineDrawerTest {
         context.addGameInstance(rect);
         String drawFrame = drawer.drawFrame(context.buildViews(), context.getGameWindowSize());
         System.out.println(drawFrame);
-        while (true){
+        while (true) {
 
             RectangleMoveAction action = new RectangleMoveAction(rect, Direction.UP);
             rect.offerAction(action);
             action.act(context);
             drawFrame = drawer.drawFrame(context.buildViews(), context.getGameWindowSize());
-            System.out.println(drawFrame+"\n".repeat(6));
+            System.out.println(drawFrame + "\n".repeat(6));
 //            System.out.println("\033[H\033[2J");
 
         }
@@ -86,7 +86,7 @@ class CommandLineDrawerTest {
     }
 
     @Test
-    void drawGameEntity2() {
+    void drawGameEntityBiDirectional() {
         context = new TestCommandLineContext();
         Rectangle2D rect = Rectangle2D.builder()
                 .atlasProcessor(null)
@@ -97,7 +97,7 @@ class CommandLineDrawerTest {
         context.addGameInstance(rect);
         String drawFrame = drawer.drawFrame(context.buildViews(), context.getGameWindowSize());
         System.out.println(drawFrame);
-        while (true){
+        while (true) {
 
             RectangleMoveAction actionR = new RectangleMoveAction(rect, Direction.RIGHT);
             RectangleMoveAction actionU = new RectangleMoveAction(rect, Direction.UP);
@@ -108,6 +108,63 @@ class CommandLineDrawerTest {
             drawFrame = drawer.drawFrame(context.buildViews(), context.getGameWindowSize());
 //            System.out.println(drawFrame+"\n".repeat(6));
             System.out.println(drawFrame);
+
+        }
+
+    }
+
+    @Test
+    void drawManyGameEntity() throws InterruptedException {
+        context = new TestCommandLineContext();
+        Rectangle2D rectBlue = Rectangle2D.builder()
+                .atlasProcessor(null)
+                .x0_x1(new PairImpl<>(1, 4))
+                .y0_y1(new PairImpl<>(9, 6))
+                .colorCode(AnsiColors.ANSI_BLUE.colorCode)
+                .z(1).build();
+        Rectangle2D rectRed = Rectangle2D.builder()
+                .atlasProcessor(null)
+                .x0_x1(new PairImpl<>(5, 8))
+                .y0_y1(new PairImpl<>(9, 6))
+                .colorCode(AnsiColors.ANSI_RED.colorCode)
+                .z(0).build();
+
+        Rectangle2D rectYellow = Rectangle2D.builder()
+                .atlasProcessor(null)
+                .x0_x1(new PairImpl<>(22, 24))
+                .y0_y1(new PairImpl<>(2, 0))
+                .colorCode(AnsiColors.ANSI_YELLOW.colorCode)
+                .z(2).build();
+
+        Rectangle2D rectPurple = Rectangle2D.builder()
+                .atlasProcessor(null)
+                .x0_x1(new PairImpl<>(1, 4))
+                .y0_y1(new PairImpl<>(9, 6))
+                .colorCode(AnsiColors.ANSI_PURPLE.colorCode)
+                .z(0).build();
+
+        context.addGameInstance(rectBlue);
+        context.addGameInstance(rectRed);
+        context.addGameInstance(rectYellow);
+        context.addGameInstance(rectPurple);
+        String drawFrame = drawer.drawFrame(context.buildViews(), context.getGameWindowSize());
+        System.out.println(drawFrame);
+        int i = 0;
+        while (i < context.getGameWindowSize().getRight()) {
+            RectangleMoveAction actionYellow = new RectangleMoveAction(rectYellow, Direction.LEFT);
+            rectYellow.offerAction(actionYellow);
+            actionYellow.act(context);
+
+            RectangleMoveAction actionBlue = new RectangleMoveAction(rectBlue, Direction.RIGHT);
+            rectBlue.offerAction(actionBlue);
+            actionBlue.act(context);
+
+            drawFrame = drawer.drawFrame(context.buildViews(), context.getGameWindowSize());
+//            System.out.println(drawFrame+"\n".repeat(6));
+            System.out.println(drawFrame);
+            System.out.println("\033[H\033[2J");
+            i++;
+            Thread.sleep(500);
 
         }
 

@@ -10,7 +10,6 @@ import java.io.IOException;
 
 public abstract class AbstractConsoleGame<GAME_CONTEXT extends CommandLineGameContext> extends AbstractGame<String, String, ConsoleGameEntity, CommandLineGameContext> {
 
-
     protected AbstractConsoleGame(GAME_CONTEXT context, ConsoleBlockingInputProcessor inputProcessor, DrawProcessor<String> drawProcessor) {
         super(context, inputProcessor, drawProcessor, System.out, System.in);
     }

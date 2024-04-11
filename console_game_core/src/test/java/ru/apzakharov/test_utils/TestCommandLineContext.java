@@ -41,7 +41,7 @@ public class TestCommandLineContext implements CommandLineGameContext {
 
     @Override
     public Pair<Integer, Integer> getGameWindowSize() {
-        return new PairImpl<>(25, 10);
+        return new PairImpl<>(40, 10);
     }
 
     @Override

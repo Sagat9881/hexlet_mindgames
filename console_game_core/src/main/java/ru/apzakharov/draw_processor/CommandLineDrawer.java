@@ -18,7 +18,7 @@ import static ru.apzakharov.draw_processor.Axis.*;
 
 public class CommandLineDrawer implements DrawProcessor<String> {
     public static final String EMMIT = " * ";
-    public static final String EMPTY_EMMIT = AnsiColors.ANSI_WHITE.colorCode + " Z " + AnsiColors.ANSI_RESET.colorCode;
+    public static final String EMPTY_EMMIT = AnsiColors.ANSI_WHITE.colorCode + "  " + AnsiColors.ANSI_RESET.colorCode;
 
     @Override
     public String drawFrame(Set<GameContext.ObjectView<String, String>> contextObjectViews, Pair<Integer, Integer> gameWindowSize) {

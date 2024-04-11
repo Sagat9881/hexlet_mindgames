@@ -2,6 +2,7 @@ package ru.apzakharov.context.entites;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import ru.apzakharov.data_structure.abstract_structure.Pair;
 import ru.apzakharov.data_structure.structure.PairImpl;
@@ -14,16 +15,17 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 @Builder
+@RequiredArgsConstructor
 public class Rectangle2D implements ConsoleGameEntity {
     private final Deque<ActionVisitor<ConsoleGameEntity, ?>> actions = new ConcurrentLinkedDeque<>();
     private final AtlasProcessor<ConsoleGameEntity, String, ?> atlasProcessor;
-    private final String colorCode = AnsiColors.ANSI_BLUE.colorCode;
+    private final String colorCode;
     @Getter
     @Setter
-    private Pair<Integer, Integer> x0_x1;
+    private volatile Pair<Integer, Integer> x0_x1;
     @Getter
     @Setter
-    private Pair<Integer, Integer> y0_y1;
+    private volatile Pair<Integer, Integer> y0_y1;
     private int z;
 
     @Override
