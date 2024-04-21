@@ -1,6 +1,6 @@
 package math_game.context;
 
-import ru.apzakharov.context.CommandLineGameContext;
+import ru.apzakharov.context.ConsoleGameContext;
 import ru.apzakharov.context.entites.ConsoleGameEntity;
 import ru.apzakharov.data_structure.abstract_structure.Pair;
 import ru.apzakharov.data_structure.structure.PairImpl;
@@ -12,7 +12,7 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class MathGameContext implements CommandLineGameContext {
+public class MathGameContext implements ConsoleGameContext {
     private final Deque<InputProcessor.Input<String>> inputDeque = new LinkedList<>();
     private final Set<ConsoleGameEntity> entities = new HashSet<>();
     private final Pair<Integer, Integer> gameSize = new PairImpl<>(30, 20);

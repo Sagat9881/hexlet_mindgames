@@ -1,6 +1,5 @@
 package ru.apzakharov.draw_processor.atlas_processor;
 
-import ru.apzakharov.context.CommandLineGameContext;
 import ru.apzakharov.data_structure.abstract_structure.Queue;
 import ru.apzakharov.data_structure.structure.LinkedListQueue;
 import ru.apzakharov.draw_processor.atlas_processor.dto.AnimationStep;

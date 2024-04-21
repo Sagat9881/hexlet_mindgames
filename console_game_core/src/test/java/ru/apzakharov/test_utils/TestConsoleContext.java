@@ -1,6 +1,6 @@
 package ru.apzakharov.test_utils;
 
-import ru.apzakharov.context.CommandLineGameContext;
+import ru.apzakharov.context.ConsoleGameContext;
 import ru.apzakharov.context.entites.ConsoleGameEntity;
 import ru.apzakharov.data_structure.abstract_structure.Pair;
 import ru.apzakharov.data_structure.structure.PairImpl;
@@ -12,16 +12,16 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class TestCommandLineContext implements CommandLineGameContext {
+public class TestConsoleContext implements ConsoleGameContext {
 
     private Set<GameContext.ObjectView<String, String>> viewMock;
     private Set<ConsoleGameEntity> gameEntitySet = new HashSet<>();
 
-    public TestCommandLineContext(ObjectView<String, String> viewMock) {
+    public TestConsoleContext(ObjectView<String, String> viewMock) {
         this.viewMock = Set.of(viewMock);
     }
 
-    public TestCommandLineContext(CommandLineObjectView... viewMocks) {
+    public TestConsoleContext(CommandLineObjectView... viewMocks) {
         this.viewMock = Arrays.stream(viewMocks).collect(Collectors.toSet());
     }
 

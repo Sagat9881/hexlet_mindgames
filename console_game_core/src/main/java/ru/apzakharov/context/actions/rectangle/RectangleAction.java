@@ -1,8 +1,6 @@
 package ru.apzakharov.context.actions.rectangle;
 
-import ru.apzakharov.context.CommandLineGameContext;
-import ru.apzakharov.context.entites.ConsoleGameEntity;
-import ru.apzakharov.gamecore.context.action.ActionVisitor;
+import ru.apzakharov.context.actions.ConsoleAction;
 
-public interface RectangleAction extends ActionVisitor<ConsoleGameEntity,CommandLineGameContext> {
+public interface RectangleAction extends ConsoleAction {
 }

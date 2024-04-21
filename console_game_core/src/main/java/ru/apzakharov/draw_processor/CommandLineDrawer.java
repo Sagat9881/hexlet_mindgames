@@ -2,7 +2,6 @@ package ru.apzakharov.draw_processor;
 
 import lombok.Builder;
 import lombok.Getter;
-import ru.apzakharov.context.CommandLineGameContext;
 import ru.apzakharov.data_structure.abstract_structure.Pair;
 import ru.apzakharov.data_structure.structure.PairImpl;
 import ru.apzakharov.gamecore.context.GameContext;

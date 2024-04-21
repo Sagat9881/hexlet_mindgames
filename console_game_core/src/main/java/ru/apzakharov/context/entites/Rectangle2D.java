@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 @Builder
-@RequiredArgsConstructor
 public class Rectangle2D implements ConsoleGameEntity {
     private final Deque<ActionVisitor<ConsoleGameEntity, ?>> actions = new ConcurrentLinkedDeque<>();
     private final AtlasProcessor<ConsoleGameEntity, String, ?> atlasProcessor;

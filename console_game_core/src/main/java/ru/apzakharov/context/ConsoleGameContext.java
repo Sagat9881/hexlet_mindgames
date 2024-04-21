@@ -5,9 +5,8 @@ import lombok.Setter;
 import ru.apzakharov.context.entites.ConsoleGameEntity;
 import ru.apzakharov.data_structure.abstract_structure.Pair;
 import ru.apzakharov.gamecore.context.GameContext;
-import ru.apzakharov.gamecore.context.entites.GameEntity;
 
-public interface CommandLineGameContext extends GameContext<String, String, ConsoleGameEntity> {
+public interface ConsoleGameContext extends GameContext<String, String, ConsoleGameEntity> {
 
     @Override
     default CommandLineObjectView buildView(ConsoleGameEntity entity) {
