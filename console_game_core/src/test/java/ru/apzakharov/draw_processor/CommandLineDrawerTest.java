@@ -4,9 +4,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.apzakharov.context.ConsoleGameContext;
 import ru.apzakharov.context.actions.rectangle.RectangleMoveAction;
+import ru.apzakharov.context.entites.ConsoleGameEntity;
 import ru.apzakharov.context.entites.Rectangle2D;
 import ru.apzakharov.context.enums.Direction;
 import ru.apzakharov.data_structure.structure.PairImpl;
+import ru.apzakharov.draw_processor.atlas_processor.SimpleCommandLineAtlasProcessor;
 import ru.apzakharov.gamecore.context.GameContext;
 import ru.apzakharov.input_processor.AnsiColors;
 import ru.apzakharov.test_utils.TestConsoleContext;
@@ -82,27 +84,27 @@ class CommandLineDrawerTest {
     void drawManyGameEntity() throws InterruptedException {
         context = new TestConsoleContext();
         Rectangle2D rectBlue = Rectangle2D.builder()
-                .atlasProcessor(null)
+                .atlasProcessor(new SimpleCommandLineAtlasProcessor<>())
                 .x0_x1(new PairImpl<>(1, 4))
                 .y0_y1(new PairImpl<>(9, 6))
                 .colorCode(AnsiColors.ANSI_BLUE.colorCode)
                 .z(1).build();
         Rectangle2D rectRed = Rectangle2D.builder()
-                .atlasProcessor(null)
+                .atlasProcessor(new SimpleCommandLineAtlasProcessor<>())
                 .x0_x1(new PairImpl<>(5, 8))
                 .y0_y1(new PairImpl<>(9, 6))
                 .colorCode(AnsiColors.ANSI_RED.colorCode)
                 .z(0).build();
 
         Rectangle2D rectYellow = Rectangle2D.builder()
-                .atlasProcessor(null)
+                .atlasProcessor(new SimpleCommandLineAtlasProcessor<>())
                 .x0_x1(new PairImpl<>(22, 24))
                 .y0_y1(new PairImpl<>(2, 0))
                 .colorCode(AnsiColors.ANSI_YELLOW.colorCode)
                 .z(2).build();
 
         Rectangle2D rectPurple = Rectangle2D.builder()
-                .atlasProcessor(null)
+                .atlasProcessor(new SimpleCommandLineAtlasProcessor<>())
                 .x0_x1(new PairImpl<>(1, 4))
                 .y0_y1(new PairImpl<>(9, 6))
                 .colorCode(AnsiColors.ANSI_PURPLE.colorCode)
