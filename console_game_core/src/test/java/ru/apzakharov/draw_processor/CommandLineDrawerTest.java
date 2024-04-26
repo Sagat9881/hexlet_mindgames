@@ -131,7 +131,7 @@ class CommandLineDrawerTest {
             System.out.println(drawFrame);
             System.out.println("\033[H\033[2J");
             i++;
-            Thread.sleep(500);
+            Thread.sleep(70);
 
         }
 

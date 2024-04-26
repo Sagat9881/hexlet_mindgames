@@ -57,12 +57,21 @@ public class CommandLineDrawer implements DrawProcessor<String> {
 
             pointsByLayers.keySet().stream()
                     .sorted(Comparator.comparingInt(Pair::getLeft))
-                    .forEachOrdered(key -> {
-                        pointsByLayers.get(key)
-                                .forEach(pointsHolder -> {
-                                    forkJoinPool.invoke(new FillMatrixRecursiveTask(drawMatrix, pointsHolder));
-                                });
-                    });
+                    .map(key -> {
+                        return CompletableFuture.runAsync(() -> {
+                            pointsByLayers.get(key)
+                                    .forEach(pointsHolder -> {
+                                        forkJoinPool.invoke(new FillMatrixRecursiveTask(drawMatrix, pointsHolder));
+                                    });
+                        });
+                    }).forEach(cf -> {
+                        try {
+                            cf.join();
+                            cf.get();
+                        } catch (InterruptedException | ExecutionException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });;
 
 
 //
@@ -147,28 +156,18 @@ public class CommandLineDrawer implements DrawProcessor<String> {
 
         @Override
         protected void compute() {
-            pointsHolders.stream().map(ph -> {
-                        return CompletableFuture.runAsync(() -> {
-                            Integer y0 = ph.yVector.poll();
-                            // Пока строки есть - заходим в рекурсию
-                            if (y0 != null) {
-                                //Спускаемся дальше по рекурсии
-                                FillMatrixRecursiveTask childTask = new FillMatrixRecursiveTask(this.matrix, ph);
-                                childTask.fork();
-                                //итеративно заполняем строку значениями
-                                fillLine(y0, ph.xVector, ph.coloredEmmit);
-                                childTask.join();
-                            }
-                        });
-                    })
-                    .forEach(cf -> {
-                        try {
-                            cf.join();
-                            cf.get();
-                        } catch (InterruptedException | ExecutionException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+            pointsHolders.forEach(ph -> {
+                Integer y0 = ph.yVector.poll();
+                // Пока строки есть - заходим в рекурсию
+                if (y0 != null) {
+                    //Спускаемся дальше по рекурсии
+                    FillMatrixRecursiveTask childTask = new FillMatrixRecursiveTask(this.matrix, ph);
+                    childTask.fork();
+                    //итеративно заполняем строку значениями
+                    fillLine(y0, ph.xVector, ph.coloredEmmit);
+                    childTask.join();
+                }
+            });
         }
 
         private void fillLine(Integer y0, java.util.Deque<Integer> xVector, String coloredEmmit) {
